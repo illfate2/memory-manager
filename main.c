@@ -1,6 +1,7 @@
 #include "memory.h"
 #include <stdlib.h>
 #include "assert.h"
+#include <string.h>
 
 int main(int argc, char *argv[]) {
     int res = _init_(3, 10);
@@ -13,8 +14,15 @@ int main(int argc, char *argv[]) {
 
     char *resData = malloc(6);
     _read(*ptr2, resData, 6);
-    printf("%s", resData);
+    assert(strcmp(resData, data) == 0);
+
     _free(*ptr2);
+
+    char *emptyData = malloc(6);
+    _read(*ptr2, emptyData, 6);
+    char *expEmpty = "";
+    assert(strcmp(emptyData, expEmpty) == 0);
+
     _clean();
     return 0;
 }

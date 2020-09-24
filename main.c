@@ -19,10 +19,13 @@ int main(int argc, char *argv[]) {
     _free(*ptr2);
 
     char *emptyData = malloc(6);
-    _read(*ptr2, emptyData, 6);
+    int res_code = _read(*ptr2, emptyData, 6);
+    assert(res_code == ERR_BAD_PARAMS);
+
     char *expEmpty = "";
     assert(strcmp(emptyData, expEmpty) == 0);
 
     _clean();
+    printf("success!!!");
     return 0;
 }

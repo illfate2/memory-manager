@@ -12,11 +12,11 @@ typedef struct block {
     size_t data_size; // todo
     size_t size; // todo
     struct block *next;
-    size_t n; // todo
+    size_t n; // todo why here
 } block;
 
 typedef struct page {
-    size_t size;
+    size_t total_size;
     size_t reserved_size; // TODO
     block *block;
     struct page *next;
@@ -24,7 +24,7 @@ typedef struct page {
 
 
 typedef struct segment {
-    page *page;
+    page *first_page;
     size_t n;
     struct segment *next;
 } segment;
@@ -35,7 +35,7 @@ typedef struct {
 } segment_table;
 
 typedef struct {
-    int num_of_pages;
+    int num_of_pages_per_segment;
     size_t page_size;
     segment_table *segment_table;
 } memory;
@@ -50,19 +50,19 @@ int add_new_block(VA *ptr, page *page, size_t szBlock) {
 }
 
 page *init_segment_pages(segment *segment) {
-    segment->page = calloc(1, sizeof(page));
+    segment->first_page = calloc(1, sizeof(page));
     segment->n++;
 
-    page *temp = mem->segment_table->segment->page;
-    temp->size = mem->page_size;
-    for (int i = 1; i < mem->num_of_pages; ++i) {
+    page *temp = mem->segment_table->segment->first_page;
+    temp->total_size = mem->page_size;
+    for (int i = 1; i < mem->num_of_pages_per_segment; ++i) {
         page *next = calloc(1, sizeof(page));
-        next->size = mem->page_size;
+        next->total_size = mem->page_size;
         temp->next = next;
         temp = temp->next;
         mem->segment_table->segment->n++;
     }
-    return segment->page;
+    return segment->first_page;
 }
 
 int _malloc(VA *ptr, size_t szBlock) {
@@ -71,9 +71,9 @@ int _malloc(VA *ptr, size_t szBlock) {
     // случай когда не хватает места в сегменте и создаем новый
     segment *temp_segment = mem->segment_table->segment;
     for (size_t i = 0; i < mem->segment_table->n; ++i) {
-        page *temp_page = temp_segment->page;
-        for (size_t j = 0; j < mem->num_of_pages; j++) {
-            if (temp_page->size - temp_page->reserved_size < szBlock) {
+        page *temp_page = temp_segment->first_page;
+        for (size_t j = 0; j < mem->num_of_pages_per_segment; j++) {
+            if (temp_page->total_size - temp_page->reserved_size < szBlock) {
                 temp_page = temp_page->next;
                 continue;
             }
@@ -105,8 +105,8 @@ int _malloc(VA *ptr, size_t szBlock) {
 page *find_page_with_block(VA ptr) {
     segment *temp_segment = mem->segment_table->segment;
     for (size_t i = 0; i < mem->segment_table->n; ++i) {
-        page *temp_page = temp_segment->page;
-        for (size_t j = 0; j < mem->num_of_pages; j++) {
+        page *temp_page = temp_segment->first_page;
+        for (size_t j = 0; j < mem->num_of_pages_per_segment; j++) {
             block *temp_block = temp_page->block;
             if (temp_block == NULL) {
                 temp_page = temp_page->next;
@@ -157,6 +157,7 @@ int _free(VA ptr) {
         prev_block = prev_block->next;
     }
     prev_block->next = cur_block->next;
+    free(cur_block->data);
     free(cur_block);
     return SUCCESS;
 }
@@ -211,7 +212,7 @@ int _init_(int n, int szPage) {
     mem->segment_table->n++;
     mem->page_size = szPage;
 
-    mem->num_of_pages = n;
+    mem->num_of_pages_per_segment = n;
 
     init_segment_pages(mem->segment_table->segment);
     return SUCCESS;
@@ -224,12 +225,12 @@ int _clean() {
     segment *cur_segment = mem->segment_table->segment;
     segment *next_segment = mem->segment_table->segment;
     for (size_t i = 0; i < mem->segment_table->n; ++i) {
-        page *cur_page = cur_segment->page;
+        page *cur_page = cur_segment->first_page;
         page *next_page = NULL;
         if (cur_page->next != NULL) {
-            next_page = cur_segment->page->next;
+            next_page = cur_segment->first_page->next;
         }
-        for (int j = 0; j < mem->num_of_pages; ++j) {
+        for (int j = 0; j < mem->num_of_pages_per_segment; ++j) {
             free(cur_page);
             cur_page = next_page;
             if (cur_page != NULL) {

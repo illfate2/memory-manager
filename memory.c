@@ -86,7 +86,7 @@ int _malloc(VA *ptr, size_t szBlock) {
             while (temp_block->next != NULL) { // идем до последнего
                 temp_block = temp_block->next;
             }
-            temp_page->block = calloc(1, sizeof(block));
+            temp_block->next = calloc(1, sizeof(block));
             temp_page->block->size = szBlock;
             *ptr = (VA) temp_page->block;
             return SUCCESS;

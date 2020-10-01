@@ -127,8 +127,11 @@ page *find_page_with_block(VA ptr) {
                 temp_block = temp_block->next;
                 if (temp_block == NULL) {
                     temp_page = temp_page->next;
-                    continue;
+                    break;
                 }
+            }
+            if (temp_block == NULL) {
+                continue;
             }
             return temp_page;
         }
@@ -176,6 +179,8 @@ int _free(VA ptr) {
 }
 
 int _read(VA ptr, void *pBuffer, size_t szBuffer) {
+    memory *m = mem; // TODO: remove
+
     block *block = find_block(ptr);
     if (block == NULL) {
         return ERR_BAD_PARAMS;
@@ -233,8 +238,6 @@ int _init_(int n, int szPage) {
 
 // нужно ли освобождать выделенные блоки? клиент выделил - должен и удалить.
 int _clean() {
-    memory *m = mem; // TODO: remove
-
     segment *cur_segment = mem->segment_table->segment;
     segment *next_segment = mem->segment_table->segment;
     for (size_t i = 0; i < mem->segment_table->num_segments; ++i) {

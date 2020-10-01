@@ -9,8 +9,8 @@
 
 typedef struct block {
     void *data;
-    size_t data_size; // todo
-    size_t size; // todo
+    size_t data_size;
+    size_t size;
     struct block *next;
 } block;
 

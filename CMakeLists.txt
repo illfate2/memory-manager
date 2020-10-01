@@ -3,4 +3,4 @@ project(os1 C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(os1 main.c memory.c memory.h)
+add_executable(os1 src/main.c src/memory/memory.c src/memory/memory.h)
